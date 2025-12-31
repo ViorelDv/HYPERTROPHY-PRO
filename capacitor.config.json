@@ -1,0 +1,8 @@
+{
+  "appId": "com.hypertrophy.app",
+  "appName": "Hypertrophy App",
+  "webDir": "dist",
+  "server": {
+    "androidScheme": "https"
+  }
+}
