@@ -54,15 +54,47 @@ npm run dev
 
 The app will be available at `http://localhost:5173`
 
+### Running on Mobile (Same WiFi)
+
+To access the app on your phone while developing:
+
+```bash
+# Start dev server with network access
+npm run dev -- --host
+```
+
+This will display both URLs:
+- **Local**: `http://localhost:5173` (your computer)
+- **Network**: `http://192.168.x.x:5173` (your phone - use this URL)
+
+Open the Network URL on your phone's browser. **Note**: Your phone must be on the same WiFi network.
+
 ### Build for Production
 
 ```bash
 # Create optimized production build
 npm run build
 
-# Preview production build
+# Preview production build locally
 npm run preview
 ```
+
+### Testing on Phone with ngrok
+
+For testing outside your local network:
+
+```bash
+# Install ngrok globally
+npm install -g ngrok
+
+# Terminal 1: Run the app
+npm run dev
+
+# Terminal 2: Expose via ngrok
+ngrok http 5173
+```
+
+ngrok provides a public URL (e.g., `https://abc123.ngrok.io`) accessible from anywhere.
 
 ## 📱 Install on Mobile Devices
 

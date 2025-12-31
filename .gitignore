@@ -51,3 +51,4 @@ dev-dist/
 .cache/
 *.tsbuildinfo
 .turbo
+.vercel
