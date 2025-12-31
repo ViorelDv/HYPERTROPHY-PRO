@@ -1426,7 +1426,7 @@ export default function HypertrophyApp() {
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-1">Muscle Group</label>
-                  <select value={selectedMuscle} onChange={e => setExerciseModalState(s => ({ ...s, selectedMuscle: e.target.value }))} className="w-full p-3 border border-gray-200 rounded-xl">
+                  <select value={selectedMuscle} onChange={e => setExerciseModalState(s => ({ ...s, selectedMuscle: e.target.value }))} className="w-full p-3 border border-gray-200 rounded-xl bg-white text-gray-900 font-medium">
                     {Object.entries(MUSCLE_LABELS).map(([key, label]) => (<option key={key} value={key}>{label}</option>))}
                   </select>
                 </div>
@@ -2036,7 +2036,7 @@ export default function HypertrophyApp() {
           <label className="block text-sm font-semibold text-gray-700 mb-2">Default Rest Timer (seconds)</label>
           <div className="flex items-center gap-4">
             <button onClick={() => setState(p => ({ ...p, settings: { ...p.settings, restTimer: Math.max(30, p.settings.restTimer - 30) } }))} className="p-2 bg-gray-100 rounded-lg"><Minus className="w-4 h-4" /></button>
-            <span className="text-2xl font-bold w-20 text-center">{state.settings.restTimer}</span>
+            <span className="text-2xl font-bold w-20 text-center text-gray-900">{state.settings.restTimer}</span>
             <button onClick={() => setState(p => ({ ...p, settings: { ...p.settings, restTimer: Math.min(300, p.settings.restTimer + 30) } }))} className="p-2 bg-gray-100 rounded-lg"><Plus className="w-4 h-4" /></button>
           </div>
         </div>
@@ -2044,16 +2044,16 @@ export default function HypertrophyApp() {
           <label className="block text-sm font-semibold text-gray-700 mb-2">Weight Increment (kg)</label>
           <div className="flex items-center gap-4">
             <button onClick={() => setState(p => ({ ...p, settings: { ...p.settings, weightIncrement: Math.max(0.5, (p.settings.weightIncrement || 2.5) - 0.5) } }))} className="p-2 bg-gray-100 rounded-lg"><Minus className="w-4 h-4" /></button>
-            <span className="text-2xl font-bold w-20 text-center">{state.settings.weightIncrement || 2.5}</span>
+            <span className="text-2xl font-bold w-20 text-center text-gray-900">{state.settings.weightIncrement || 2.5}</span>
             <button onClick={() => setState(p => ({ ...p, settings: { ...p.settings, weightIncrement: Math.min(10, (p.settings.weightIncrement || 2.5) + 0.5) } }))} className="p-2 bg-gray-100 rounded-lg"><Plus className="w-4 h-4" /></button>
           </div>
         </div>
         <button onClick={() => setExerciseModalState({ isOpen: true, mode: 'view', selectedMuscle: 'chest', exerciseData: { name: '', equipment: 'barbell', primary: 'chest' }, targetExerciseIndex: null })} className="w-full bg-white rounded-xl p-4 border border-gray-100 flex items-center justify-between">
-          <div className="flex items-center gap-3"><Dumbbell className="w-5 h-5 text-purple-600" /><span className="font-semibold">Manage Custom Exercises</span></div>
+          <div className="flex items-center gap-3"><Dumbbell className="w-5 h-5 text-purple-600" /><span className="font-semibold text-gray-900">Manage Custom Exercises</span></div>
           <ChevronRight className="w-5 h-5 text-gray-400" />
         </button>
         <button onClick={() => setTemplateModalState({ isOpen: true, mode: 'view', selectedTemplate: null, editingTemplate: null, newTemplateName: '' })} className="w-full bg-white rounded-xl p-4 border border-gray-100 flex items-center justify-between">
-          <div className="flex items-center gap-3"><Copy className="w-5 h-5 text-blue-600" /><span className="font-semibold">Manage Custom Templates</span></div>
+          <div className="flex items-center gap-3"><Copy className="w-5 h-5 text-blue-600" /><span className="font-semibold text-gray-900">Manage Custom Templates</span></div>
           <ChevronRight className="w-5 h-5 text-gray-400" />
         </button>
         <button onClick={() => { if (confirm('Reset all data? This cannot be undone.')) { setState(createInitialState()); setCurrentView('home'); } }} className="w-full bg-red-50 text-red-600 font-semibold py-3 rounded-xl border border-red-200 flex items-center justify-center gap-2">
