@@ -1506,7 +1506,7 @@ export default function HypertrophyApp() {
           <label className="block text-sm font-semibold text-gray-700 mb-3">Mesocycle Length</label>
           <div className="flex gap-2">
             {[4, 5, 6].map(w => (
-              <button key={w} onClick={() => setNewMesoState(s => ({ ...s, weeks: w }))} className={`flex-1 p-3 rounded-xl border-2 font-bold ${weeks === w ? 'border-orange-500 bg-orange-50 text-orange-600' : 'border-gray-200 hover:border-gray-300'}`}>{w} Weeks</button>
+              <button key={w} onClick={() => setNewMesoState(s => ({ ...s, weeks: w }))} className={`flex-1 p-3 rounded-xl border-2 font-bold ${weeks === w ? 'border-orange-500 bg-orange-50 text-orange-600' : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300'}`}>{w} Weeks</button>
             ))}
           </div>
           <p className="text-xs text-gray-500 mt-2">* Last week is always a deload</p>
