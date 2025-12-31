@@ -783,6 +783,7 @@ export default function HypertrophyApp() {
     isOpen: false, mode: 'view', selectedTemplate: null, editingTemplate: null, newTemplateName: '',
   });
   const [selectedExerciseForChart, setSelectedExerciseForChart] = useState(null);
+  const [selectedWorkoutDetail, setSelectedWorkoutDetail] = useState(null);
   const fileInputRef = useRef(null);
 
   const getAllTemplates = () => ({ ...DEFAULT_TEMPLATES, ...state.customTemplates });
@@ -1157,6 +1158,97 @@ export default function HypertrophyApp() {
       volumeByDate[date] = (volumeByDate[date] || 0) + volume;
     });
     return Object.entries(volumeByDate).map(([date, volume]) => ({ date, volume: Math.round(volume) }));
+  };
+
+  const renderWorkoutDetailModal = () => {
+    if (!selectedWorkoutDetail) return null;
+    const workout = selectedWorkoutDetail;
+    const formatDuration = (seconds) => {
+      if (!seconds) return 'N/A';
+      const mins = Math.floor(seconds / 60);
+      const secs = seconds % 60;
+      return `${mins}m ${secs}s`;
+    };
+    
+    return (
+      <div className="fixed inset-0 bg-black/50 z-50 flex items-end sm:items-center justify-center">
+        <div className="bg-white w-full max-w-lg rounded-t-2xl sm:rounded-2xl max-h-[85vh] overflow-hidden">
+          <div className="p-4 border-b border-gray-200 flex justify-between items-center bg-gradient-to-r from-orange-500 to-red-600 text-white rounded-t-2xl">
+            <div>
+              <h3 className="font-bold text-lg">{workout.name}</h3>
+              <p className="text-sm text-orange-100">
+                {new Date(workout.startTime).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+              </p>
+            </div>
+            <button onClick={() => setSelectedWorkoutDetail(null)} className="p-2 hover:bg-white/20 rounded-lg">
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+          
+          <div className="p-4 overflow-y-auto max-h-[70vh]">
+            {/* Workout Summary */}
+            <div className="grid grid-cols-3 gap-3 mb-4">
+              <div className="bg-blue-50 rounded-xl p-3 text-center">
+                <p className="text-xs text-blue-600 font-medium">Duration</p>
+                <p className="text-lg font-bold text-blue-700">{formatDuration(workout.durationSeconds)}</p>
+              </div>
+              <div className="bg-green-50 rounded-xl p-3 text-center">
+                <p className="text-xs text-green-600 font-medium">Total Sets</p>
+                <p className="text-lg font-bold text-green-700">{workout.exercises.reduce((acc, ex) => acc + ex.sets.filter(s => s.completed).length, 0)}</p>
+              </div>
+              <div className="bg-purple-50 rounded-xl p-3 text-center">
+                <p className="text-xs text-purple-600 font-medium">Volume</p>
+                <p className="text-lg font-bold text-purple-700">{Math.round(workout.exercises.reduce((acc, ex) => acc + ex.sets.filter(s => s.completed).reduce((setAcc, s) => setAcc + (s.weight || 0) * (s.reps || 0), 0), 0)).toLocaleString()} kg</p>
+              </div>
+            </div>
+            
+            {/* Feedback */}
+            {workout.feedback && (
+              <div className="bg-orange-50 rounded-xl p-3 mb-4">
+                <p className="text-xs font-semibold text-orange-600 mb-2">Workout Feedback</p>
+                <div className="flex justify-around text-center">
+                  <div><p className="text-xs text-gray-500">Pump</p><p className="font-bold text-orange-600">{workout.feedback.pump}/5</p></div>
+                  <div><p className="text-xs text-gray-500">Soreness</p><p className="font-bold text-orange-600">{workout.feedback.soreness}/5</p></div>
+                  <div><p className="text-xs text-gray-500">Performance</p><p className="font-bold text-orange-600">{workout.feedback.performance}/5</p></div>
+                </div>
+              </div>
+            )}
+            
+            {/* Exercises */}
+            <h4 className="font-semibold text-gray-700 mb-3">Exercises</h4>
+            <div className="space-y-3">
+              {workout.exercises.map((exercise, exIdx) => (
+                <div key={exIdx} className="bg-gray-50 rounded-xl p-3">
+                  <div className="flex justify-between items-start mb-2">
+                    <div>
+                      <p className="font-bold text-gray-900">{exercise.name}</p>
+                      <p className="text-xs text-gray-500">{MUSCLE_LABELS[exercise.muscle]}</p>
+                    </div>
+                    <span className="text-xs bg-gray-200 text-gray-600 px-2 py-1 rounded">{exercise.sets.filter(s => s.completed).length} sets</span>
+                  </div>
+                  <div className="space-y-1">
+                    <div className="grid grid-cols-4 gap-2 text-xs font-semibold text-gray-500 px-2">
+                      <span>Set</span>
+                      <span className="text-center">Weight</span>
+                      <span className="text-center">Reps</span>
+                      <span className="text-center">RIR</span>
+                    </div>
+                    {exercise.sets.filter(s => s.completed).map((set, setIdx) => (
+                      <div key={setIdx} className="grid grid-cols-4 gap-2 bg-white rounded-lg p-2 text-sm">
+                        <span className="font-medium text-gray-600">{setIdx + 1}</span>
+                        <span className="text-center font-bold text-gray-900">{set.weight || '-'} kg</span>
+                        <span className="text-center font-bold text-gray-900">{set.reps || '-'}</span>
+                        <span className="text-center text-gray-600">{set.rir ?? '-'}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
   };
 
   const renderTemplateModal = () => {
@@ -1851,7 +1943,7 @@ export default function HypertrophyApp() {
               {state.history.slice(-10).reverse().map((workout, i) => {
                 const formatDur = (s) => s ? `${Math.floor(s/60)}m` : '';
                 return (
-                  <div key={i} className="bg-white rounded-xl p-4 border border-gray-100">
+                  <div key={i} className="bg-white rounded-xl p-4 border border-gray-100 cursor-pointer hover:bg-gray-50 transition-colors" onClick={() => setSelectedWorkoutDetail(workout)}>
                     <div className="flex justify-between items-center">
                       <div>
                         <p className="font-bold text-gray-900">{workout.name}</p>
@@ -1863,6 +1955,7 @@ export default function HypertrophyApp() {
                       <div className="flex items-center gap-2">
                         {workout.durationSeconds && <span className="text-xs bg-blue-100 text-blue-600 px-2 py-1 rounded flex items-center gap-1"><Clock className="w-3 h-3" />{formatDur(workout.durationSeconds)}</span>}
                         {workout.feedback && <span className="text-xs bg-orange-100 text-orange-600 px-2 py-1 rounded">Pump: {workout.feedback.pump}/5</span>}
+                        <ChevronRight className="w-5 h-5 text-gray-400" />
                       </div>
                     </div>
                   </div>
@@ -1996,6 +2089,7 @@ export default function HypertrophyApp() {
       <div className="pb-20">{renderContent()}</div>
       {renderExerciseModal()}
       {renderTemplateModal()}
+      {renderWorkoutDetailModal()}
       {currentView !== 'active_workout' && (
         <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-4 py-2">
           <div className="flex justify-around">
