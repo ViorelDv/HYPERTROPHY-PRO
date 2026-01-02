@@ -833,6 +833,11 @@ export default function HypertrophyApp() {
   // Handle back button for view navigation
   useEffect(() => {
     const handlePopState = (event) => {
+      // If a modal is open, let the modal handler deal with it
+      if (templateModalState.isOpen || exerciseModalState.isOpen || selectedWorkoutDetail) {
+        return;
+      }
+      
       if (currentView === 'active_workout') {
         // Don't allow back during active workout
         window.history.pushState({ view: currentView }, '');
@@ -858,7 +863,7 @@ export default function HypertrophyApp() {
         window.removeEventListener('popstate', handlePopState);
       };
     }
-  }, [currentView, viewHistory]);
+  }, [currentView, viewHistory, templateModalState.isOpen, exerciseModalState.isOpen, selectedWorkoutDetail]);
 
   useEffect(() => {
     let interval;
