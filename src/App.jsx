@@ -988,7 +988,7 @@ export default function HypertrophyApp() {
               exercises.push({
                 exerciseId: ex.id, name: ex.name, muscle,
                 sets: Array(sets).fill(null).map(() => ({
-                  targetReps: 10, targetRIR, weight: null, reps: null, rir: null, completed: false, suggestedWeight: null,
+                  targetReps: 10, targetRIR, weight: null, reps: null, rir: null, completed: false, suggestedWeight: null, notes: '',
                 })),
               });
             });
@@ -1086,7 +1086,7 @@ export default function HypertrophyApp() {
         name: newExercise.name,
         sets: oldExercise.sets.map(set => {
           const suggestedWeight = calculateSuggestedWeight(history, set.targetReps, set.targetRIR, prev.settings);
-          return { ...set, suggestedWeight, weight: set.completed ? set.weight : suggestedWeight, completed: false };
+          return { ...set, suggestedWeight, weight: set.completed ? set.weight : suggestedWeight, completed: false, notes: set.notes || '' };
         }),
       };
       return { ...prev, activeWorkout: newWorkout };
@@ -1112,6 +1112,7 @@ export default function HypertrophyApp() {
           rir: null,
           completed: false,
           suggestedWeight,
+          notes: '',
         }],
       };
       return { ...prev, activeWorkout: newWorkout };
@@ -1151,6 +1152,7 @@ export default function HypertrophyApp() {
           rir: null,
           completed: false,
           suggestedWeight,
+          notes: '',
         }, {
           targetReps: 10,
           targetRIR: 2,
@@ -1159,6 +1161,7 @@ export default function HypertrophyApp() {
           rir: null,
           completed: false,
           suggestedWeight,
+          notes: '',
         }],
       }];
       return { ...prev, activeWorkout: newWorkout };
@@ -1300,11 +1303,18 @@ export default function HypertrophyApp() {
                       <span className="text-center">RIR</span>
                     </div>
                     {exercise.sets.filter(s => s.completed).map((set, setIdx) => (
-                      <div key={setIdx} className="grid grid-cols-4 gap-2 bg-white rounded-lg p-2 text-sm">
-                        <span className="font-medium text-gray-600">{setIdx + 1}</span>
-                        <span className="text-center font-bold text-gray-900">{set.weight || '-'} kg</span>
-                        <span className="text-center font-bold text-gray-900">{set.reps || '-'}</span>
-                        <span className="text-center text-gray-600">{set.rir ?? '-'}</span>
+                      <div key={setIdx} className="space-y-1">
+                        <div className="grid grid-cols-4 gap-2 bg-white rounded-lg p-2 text-sm">
+                          <span className="font-medium text-gray-600">{setIdx + 1}</span>
+                          <span className="text-center font-bold text-gray-900">{set.weight || '-'} kg</span>
+                          <span className="text-center font-bold text-gray-900">{set.reps || '-'}</span>
+                          <span className="text-center text-gray-600">{set.rir ?? '-'}</span>
+                        </div>
+                        {set.notes && (
+                          <div className="bg-blue-50 rounded-lg p-2 ml-2">
+                            <p className="text-xs text-blue-700"><span className="font-semibold">Note:</span> {set.notes}</p>
+                          </div>
+                        )}
                       </div>
                     ))}
                   </div>
@@ -1865,34 +1875,46 @@ export default function HypertrophyApp() {
                     <div className="col-span-2"></div>
                   </div>
                   {exercise.sets.map((set, setIdx) => (
-                    <div key={setIdx} className={`grid grid-cols-12 gap-2 items-center py-2 px-2 rounded-lg mb-1 ${set.completed ? 'bg-green-50' : 'hover:bg-gray-50'}`}>
-                      <div className="col-span-1 font-bold text-gray-700 flex items-center gap-1">
-                        {setIdx + 1}
-                        {!set.completed && exercise.sets.length > 1 && (
-                          <button onClick={() => removeSetFromExercise(exIdx, setIdx)} className="text-red-400 hover:text-red-600 p-0.5">
-                            <X className="w-3 h-3" />
+                    <div key={setIdx} className="mb-2">
+                      <div className={`grid grid-cols-12 gap-2 items-center py-2 px-2 rounded-lg ${set.completed ? 'bg-green-50' : 'hover:bg-gray-50'}`}>
+                        <div className="col-span-1 font-bold text-gray-700 flex items-center gap-1">
+                          {setIdx + 1}
+                          {!set.completed && exercise.sets.length > 1 && (
+                            <button onClick={() => removeSetFromExercise(exIdx, setIdx)} className="text-red-400 hover:text-red-600 p-0.5">
+                              <X className="w-3 h-3" />
+                            </button>
+                          )}
+                        </div>
+                        <div className="col-span-3">
+                          <div className="relative">
+                            <input type="number" placeholder={set.suggestedWeight ? `${set.suggestedWeight}` : 'kg'} value={set.weight || ''} disabled={set.completed} onChange={e => updateSet(exIdx, setIdx, 'weight', parseFloat(e.target.value) || null)} className={`w-full p-2 border rounded-lg text-center text-sm font-semibold text-gray-900 disabled:bg-gray-100 ${set.suggestedWeight && !set.weight ? 'border-orange-300 bg-orange-50' : 'border-gray-200'}`} />
+                            {set.suggestedWeight && !set.completed && !set.weight && <span className="absolute -top-1 -right-1 bg-orange-500 text-white text-xs px-1 rounded">💡</span>}
+                          </div>
+                        </div>
+                        <div className="col-span-3">
+                          <input type="number" placeholder={`${set.targetReps}`} value={set.reps || ''} disabled={set.completed} onChange={e => updateSet(exIdx, setIdx, 'reps', parseInt(e.target.value) || null)} className="w-full p-2 border border-gray-200 rounded-lg text-center text-sm font-semibold text-gray-900 disabled:bg-gray-100" />
+                        </div>
+                        <div className="col-span-3">
+                          <select value={set.rir ?? ''} disabled={set.completed} onChange={e => updateSet(exIdx, setIdx, 'rir', parseInt(e.target.value))} className="w-full p-2 border border-gray-200 rounded-lg text-center text-sm font-semibold text-gray-900 disabled:bg-gray-100">
+                            <option value="">{set.targetRIR}</option>
+                            {[0, 1, 2, 3, 4, 5].map(r => <option key={r} value={r}>{r}</option>)}
+                          </select>
+                        </div>
+                        <div className="col-span-2">
+                          <button onClick={() => completeSet(exIdx, setIdx)} disabled={set.completed || !set.weight || !set.reps} className={`w-full p-2 rounded-lg ${set.completed ? 'bg-green-500 text-white' : 'bg-orange-500 text-white hover:bg-orange-600 disabled:bg-gray-200 disabled:text-gray-400'}`}>
+                            <Check className="w-4 h-4 mx-auto" />
                           </button>
-                        )}
-                      </div>
-                      <div className="col-span-3">
-                        <div className="relative">
-                          <input type="number" placeholder={set.suggestedWeight ? `${set.suggestedWeight}` : 'kg'} value={set.weight || ''} disabled={set.completed} onChange={e => updateSet(exIdx, setIdx, 'weight', parseFloat(e.target.value) || null)} className={`w-full p-2 border rounded-lg text-center text-sm font-semibold text-gray-900 disabled:bg-gray-100 ${set.suggestedWeight && !set.weight ? 'border-orange-300 bg-orange-50' : 'border-gray-200'}`} />
-                          {set.suggestedWeight && !set.completed && !set.weight && <span className="absolute -top-1 -right-1 bg-orange-500 text-white text-xs px-1 rounded">💡</span>}
                         </div>
                       </div>
-                      <div className="col-span-3">
-                        <input type="number" placeholder={`${set.targetReps}`} value={set.reps || ''} disabled={set.completed} onChange={e => updateSet(exIdx, setIdx, 'reps', parseInt(e.target.value) || null)} className="w-full p-2 border border-gray-200 rounded-lg text-center text-sm font-semibold text-gray-900 disabled:bg-gray-100" />
-                      </div>
-                      <div className="col-span-3">
-                        <select value={set.rir ?? ''} disabled={set.completed} onChange={e => updateSet(exIdx, setIdx, 'rir', parseInt(e.target.value))} className="w-full p-2 border border-gray-200 rounded-lg text-center text-sm font-semibold text-gray-900 disabled:bg-gray-100">
-                          <option value="">{set.targetRIR}</option>
-                          {[0, 1, 2, 3, 4, 5].map(r => <option key={r} value={r}>{r}</option>)}
-                        </select>
-                      </div>
-                      <div className="col-span-2">
-                        <button onClick={() => completeSet(exIdx, setIdx)} disabled={set.completed || !set.weight || !set.reps} className={`w-full p-2 rounded-lg ${set.completed ? 'bg-green-500 text-white' : 'bg-orange-500 text-white hover:bg-orange-600 disabled:bg-gray-200 disabled:text-gray-400'}`}>
-                          <Check className="w-4 h-4 mx-auto" />
-                        </button>
+                      <div className="px-2 mt-1">
+                        <input 
+                          type="text" 
+                          placeholder="Add notes (optional)..."
+                          value={set.notes || ''}
+                          disabled={set.completed}
+                          onChange={e => updateSet(exIdx, setIdx, 'notes', e.target.value)}
+                          className="w-full p-2 text-xs border border-gray-200 rounded-lg text-gray-700 placeholder-gray-400 disabled:bg-gray-50 disabled:text-gray-500"
+                        />
                       </div>
                     </div>
                   ))}
