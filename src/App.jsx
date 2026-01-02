@@ -1222,7 +1222,7 @@ export default function HypertrophyApp() {
                   <div className="flex justify-between items-start mb-2">
                     <div>
                       <p className="font-bold text-gray-900">{exercise.name}</p>
-                      <p className="text-xs text-gray-500">{MUSCLE_LABELS[exercise.muscle]}</p>
+                      <p className="text-xs text-gray-500">{exercise.muscle}</p>
                     </div>
                     <span className="text-xs bg-gray-200 text-gray-600 px-2 py-1 rounded">{exercise.sets.filter(s => s.completed).length} sets</span>
                   </div>
@@ -1260,7 +1260,7 @@ export default function HypertrophyApp() {
       <div className="fixed inset-0 bg-black/50 z-50 flex items-end sm:items-center justify-center">
         <div className="bg-white w-full max-w-lg rounded-t-2xl sm:rounded-2xl max-h-[85vh] overflow-hidden">
           <div className="p-4 border-b border-gray-200 flex justify-between items-center">
-            <h3 className="font-bold text-lg">
+            <h3 className="font-bold text-lg text-gray-900">
               {mode === 'view' ? 'Manage Templates' : mode === 'edit' ? 'Edit Template' : 'Create Template'}
             </h3>
             <button onClick={() => setTemplateModalState(s => ({ ...s, isOpen: false }))} className="p-2 hover:bg-gray-100 rounded-lg">
@@ -1527,26 +1527,26 @@ export default function HypertrophyApp() {
           <Target className="w-12 h-12 text-gray-400 mx-auto mb-3" />
           <h3 className="font-bold text-gray-700 mb-2">No Active Program</h3>
           <p className="text-gray-500 text-sm mb-4">Start a new mesocycle to begin training</p>
-          <button onClick={() => setCurrentView('new_meso')} className="bg-orange-500 text-white font-bold py-3 px-6 rounded-xl hover:bg-orange-600">Create Program</button>
+          <button onClick={() => setCurrentView('new_meso')} className="mt-4 bg-orange-500 text-white px-6 py-2 rounded-xl">Create Program</button>
         </div>
       )}
       <div className="grid grid-cols-3 gap-3">
         <div className="bg-white rounded-xl p-4 border border-gray-100 shadow-sm">
           <div className="flex items-center gap-3">
             <div className="bg-blue-100 p-2 rounded-lg"><Calendar className="w-5 h-5 text-blue-600" /></div>
-            <div><p className="text-2xl font-black text-gray-900">{state.history.length}</p><p className="text-xs text-gray-500">Workouts</p></div>
+            <div><p className="text-xl font-black text-gray-900">{state.history.length}</p><p className="text-xs text-gray-500">Workouts</p></div>
           </div>
         </div>
         <div className="bg-white rounded-xl p-4 border border-gray-100 shadow-sm">
           <div className="flex items-center gap-3">
             <div className="bg-green-100 p-2 rounded-lg"><TrendingUp className="w-5 h-5 text-green-600" /></div>
-            <div><p className="text-2xl font-black text-gray-900">{state.history.reduce((acc, w) => acc + w.exercises.reduce((a, e) => a + e.sets.filter(s => s.completed).length, 0), 0)}</p><p className="text-xs text-gray-500">Total Sets</p></div>
+            <div><p className="text-xl font-black text-gray-900">{state.history.reduce((acc, w) => acc + w.exercises.reduce((a, e) => a + e.sets.filter(s => s.completed).length, 0), 0)}</p><p className="text-xs text-gray-500">Total Sets</p></div>
           </div>
         </div>
         <div className="bg-white rounded-xl p-4 border border-gray-100 shadow-sm">
           <div className="flex items-center gap-3">
             <div className="bg-purple-100 p-2 rounded-lg"><Clock className="w-5 h-5 text-purple-600" /></div>
-            <div><p className="text-2xl font-black text-gray-900">{state.history.length > 0 ? Math.round(state.history.filter(w => w.durationSeconds).reduce((acc, w) => acc + (w.durationSeconds || 0), 0) / Math.max(1, state.history.filter(w => w.durationSeconds).length) / 60) : 0}</p><p className="text-xs text-gray-500">Avg Min</p></div>
+            <div><p className="text-xl font-black text-gray-900">{state.history.length > 0 ? Math.round(state.history.filter(w => w.durationSeconds).reduce((acc, w) => acc + (w.durationSeconds || 0), 0) / Math.max(1, state.history.filter(w => w.durationSeconds).length) / 60) : 0}</p><p className="text-xs text-gray-500">Avg Min</p></div>
           </div>
         </div>
       </div>
@@ -1629,7 +1629,7 @@ export default function HypertrophyApp() {
 
   const renderWorkout = () => {
     if (!state.mesocycle) {
-      return (<div className="p-6 text-center"><p>No active program. Start a new mesocycle first.</p><button onClick={() => setCurrentView('new_meso')} className="mt-4 bg-orange-500 text-white px-6 py-2 rounded-xl">Create Program</button></div>);
+      return (<div className="p-6 text-center"><p className="text-gray-700 mb-4">No active program. Start a new mesocycle first.</p><button onClick={() => setCurrentView('new_meso')} className="mt-4 bg-orange-500 text-white px-6 py-2 rounded-xl">Create Program</button></div>);
     }
     const workout = getCurrentWorkout();
     const week = state.mesocycle.weeksData[state.mesocycle.currentWeek - 1];
@@ -1655,7 +1655,7 @@ export default function HypertrophyApp() {
                 const lastWeight = history && history.length > 0 ? history[history.length - 1].weight : null;
                 return (
                   <div key={i} className="bg-white rounded-xl p-4 border border-gray-100 shadow-sm">
-                    <div className="flex justify-between items-start">
+                    <div className="flex justify-between items-start mb-2">
                       <div>
                         <p className="font-bold text-gray-900">{ex.name}</p>
                         <p className="text-sm text-gray-500">{MUSCLE_LABELS[ex.muscle]}</p>
@@ -1785,7 +1785,7 @@ export default function HypertrophyApp() {
                         <button onClick={() => setExerciseModalState({ isOpen: true, mode: 'select', selectedMuscle: exercise.muscle, exerciseData: { name: '', equipment: 'barbell', primary: exercise.muscle }, targetExerciseIndex: exIdx })} className="p-1 text-gray-400 hover:text-orange-500 hover:bg-orange-50 rounded"><Edit3 className="w-4 h-4" /></button>
                       </div>
                       <p className="text-sm text-gray-500">{MUSCLE_LABELS[exercise.muscle]} • Target RIR: {exercise.sets[0]?.targetRIR}</p>
-                      {best && <p className="text-xs text-green-600 mt-1">🏆 PR: {best.weight}kg × {best.reps} (E1RM: {best.e1rm}kg)</p>}
+                      {best && <p className="text-xs text-green-600 mt-1">🏆 PR: {best.e1rm}kg</p>}
                     </div>
                     <div className="text-right"><p className="text-sm text-gray-500">{exercise.sets.filter(s => s.completed).length}/{exercise.sets.length} sets</p></div>
                   </div>
@@ -1887,7 +1887,7 @@ export default function HypertrophyApp() {
     const overallVolumeData = getOverallVolumeData();
     return (
       <div className="p-6 space-y-6">
-        <h2 className="text-2xl font-bold">Progress</h2>
+        <h2 className="text-2xl font-bold text-gray-900">Progress</h2>
         <ProgressionChart data={overallVolumeData} title="📊 Total Volume Over Time (kg × reps)" dataKey="volume" color="#f97316" />
         {exercisePRs.length > 0 && (
           <div className="bg-white rounded-xl p-4 border border-gray-100">
@@ -2016,7 +2016,7 @@ export default function HypertrophyApp() {
     };
     return (
     <div className="p-6 space-y-6">
-      <h2 className="text-2xl font-bold">Settings</h2>
+      <h2 className="text-2xl font-bold text-gray-900">Settings</h2>
       <div className="bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl p-5 text-white">
         <div className="flex items-center gap-3 mb-3"><Cloud className="w-6 h-6" /><h3 className="font-bold text-lg">Backup & Sync</h3></div>
         <p className="text-blue-100 text-sm mb-4">Export your data and save it to Google Drive, Dropbox, or anywhere else. Import it on any device.</p>
@@ -2035,17 +2035,17 @@ export default function HypertrophyApp() {
         <div className="bg-white rounded-xl p-4 border border-gray-100">
           <label className="block text-sm font-semibold text-gray-700 mb-2">Default Rest Timer (seconds)</label>
           <div className="flex items-center gap-4">
-            <button onClick={() => setState(p => ({ ...p, settings: { ...p.settings, restTimer: Math.max(30, p.settings.restTimer - 30) } }))} className="p-2 bg-gray-100 rounded-lg"><Minus className="w-4 h-4" /></button>
+            <button onClick={() => setState(p => ({ ...p, settings: { ...p.settings, restTimer: Math.max(30, p.settings.restTimer - 30) } }))} className="p-3 bg-orange-500 hover:bg-orange-600 text-white rounded-lg transition-colors"><Minus className="w-5 h-5" /></button>
             <span className="text-2xl font-bold w-20 text-center text-gray-900">{state.settings.restTimer}</span>
-            <button onClick={() => setState(p => ({ ...p, settings: { ...p.settings, restTimer: Math.min(300, p.settings.restTimer + 30) } }))} className="p-2 bg-gray-100 rounded-lg"><Plus className="w-4 h-4" /></button>
+            <button onClick={() => setState(p => ({ ...p, settings: { ...p.settings, restTimer: Math.min(300, p.settings.restTimer + 30) } }))} className="p-3 bg-orange-500 hover:bg-orange-600 text-white rounded-lg transition-colors"><Plus className="w-5 h-5" /></button>
           </div>
         </div>
         <div className="bg-white rounded-xl p-4 border border-gray-100">
           <label className="block text-sm font-semibold text-gray-700 mb-2">Weight Increment (kg)</label>
           <div className="flex items-center gap-4">
-            <button onClick={() => setState(p => ({ ...p, settings: { ...p.settings, weightIncrement: Math.max(0.5, (p.settings.weightIncrement || 2.5) - 0.5) } }))} className="p-2 bg-gray-100 rounded-lg"><Minus className="w-4 h-4" /></button>
+            <button onClick={() => setState(p => ({ ...p, settings: { ...p.settings, weightIncrement: Math.max(0.5, (p.settings.weightIncrement || 2.5) - 0.5) } }))} className="p-3 bg-orange-500 hover:bg-orange-600 text-white rounded-lg transition-colors"><Minus className="w-5 h-5" /></button>
             <span className="text-2xl font-bold w-20 text-center text-gray-900">{state.settings.weightIncrement || 2.5}</span>
-            <button onClick={() => setState(p => ({ ...p, settings: { ...p.settings, weightIncrement: Math.min(10, (p.settings.weightIncrement || 2.5) + 0.5) } }))} className="p-2 bg-gray-100 rounded-lg"><Plus className="w-4 h-4" /></button>
+            <button onClick={() => setState(p => ({ ...p, settings: { ...p.settings, weightIncrement: Math.min(10, (p.settings.weightIncrement || 2.5) + 0.5) } }))} className="p-3 bg-orange-500 hover:bg-orange-600 text-white rounded-lg transition-colors"><Plus className="w-5 h-5" /></button>
           </div>
         </div>
         <button onClick={() => setExerciseModalState({ isOpen: true, mode: 'view', selectedMuscle: 'chest', exerciseData: { name: '', equipment: 'barbell', primary: 'chest' }, targetExerciseIndex: null })} className="w-full bg-white rounded-xl p-4 border border-gray-100 flex items-center justify-between">
