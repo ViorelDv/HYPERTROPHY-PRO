@@ -9,7 +9,7 @@ A progressive web application (PWA) for tracking hypertrophy training with smart
 ## ✨ Features
 
 ### Core Features
-- 📊 **Progressive Overload Tracking** - Auto-suggested weights based on previous performance
+- 📊 **Progressive Overload Tracking** - Auto-suggested weights based on previous performance and RIR
 - 📈 **Volume Management** - MEV/MAV/MRV landmarks for optimal muscle growth
 - 🏋️ **900+ Exercises** - Comprehensive library across 12 muscle groups
 - 📅 **Mesocycle Planning** - 4-6 week training blocks with deload weeks
@@ -17,6 +17,9 @@ A progressive web application (PWA) for tracking hypertrophy training with smart
 - 📱 **Offline Support** - Works without internet connection
 - 🎯 **Custom Templates** - Create your own training splits
 - 💾 **Data Export/Import** - Full backup and sync capabilities
+- 📝 **Set Notes** - Add notes to individual sets for tracking form, pain, or adjustments
+- 📱 **Native Back Button Support** - Mobile back button works naturally throughout the app
+- 📊 **Workout History Details** - View complete workout breakdowns with all exercise and set data
 
 ### Exercise Database
 - **12 Muscle Groups**: Chest, Back, Shoulders, Biceps, Triceps, Quads, Hamstrings, Glutes, Calves, Abs, Traps, Forearms
@@ -166,10 +169,22 @@ npx gh-pages -d dist
 
 1. **Start Workout**: Tap "Start Workout" on your scheduled day
 2. **Log Sets**: Enter weight, reps, and RIR (Reps in Reserve)
-3. **Use Suggestions**: App suggests weights based on previous performance
-4. **Rest Timer**: Auto-starts after completing a set
-5. **Modify On-The-Fly**: Add/remove sets or exercises as needed
-6. **Finish**: Complete workout feedback for optimization
+3. **Use Suggestions**: App suggests weights based on previous performance and RIR difference
+   - If you had 2+ extra reps in reserve → Weight increases by 2 increments
+   - If you had 1 extra rep in reserve → Weight increases by 1 increment
+   - If RIR was at target → Weight stays the same
+   - If RIR was 2+ below target → Weight decreases by 1 increment
+4. **Add Notes**: Optionally add notes to any set (e.g., "felt pain", "different grip", "easy set")
+5. **Rest Timer**: Auto-starts after completing a set with customizable duration
+6. **Modify On-The-Fly**: Add/remove sets or exercises, replace exercises with alternatives
+7. **Finish**: Complete workout feedback (pump, soreness, performance) for optimization
+
+### Workout History
+
+- **View Past Workouts**: Tap any workout in history to see full details
+- **Complete Breakdown**: See all exercises, sets, weights, reps, RIR, and notes
+- **Performance Metrics**: View duration, total sets, and total volume per workout
+- **Feedback Tracking**: Review your pump, soreness, and performance ratings
 
 ### Tracking Progress
 
@@ -208,12 +223,13 @@ training_app/
 ## 🛠️ Technology Stack
 
 - **Frontend**: React 18 with Hooks
-- **Build Tool**: Vite 5
+- **Build Tool**: Vite 5 with HMR
 - **Styling**: Tailwind CSS 3
-- **Charts**: Recharts
+- **Charts**: Recharts for data visualization
 - **Icons**: Lucide React
 - **PWA**: vite-plugin-pwa (Workbox)
-- **Storage**: LocalStorage (automatic persistence)
+- **Storage**: LocalStorage with automatic persistence
+- **Navigation**: HTML5 History API for native back button support
 
 ## 📊 Volume Landmarks (Sets per Week)
 
@@ -286,6 +302,15 @@ Since data is stored locally, sync manually:
 - Need at least 2 data points for charts
 - Complete more workouts to populate graphs
 
+### Back Button Not Working
+- Ensure you're using a modern browser with History API support
+- On mobile, use the device's back button (not browser's back button)
+- Modals close first, then navigation goes back to previous page
+
+### Input Text Not Visible
+- All inputs have been updated with proper text colors
+- If still experiencing issues, try clearing browser cache and hard refresh (Ctrl+Shift+R)
+
 ## 🤝 Contributing
 
 Contributions are welcome! Please:
@@ -323,9 +348,20 @@ Having issues? Please:
 - [ ] Exercise form tips and cues
 - [ ] Cloud backup with account system
 - [ ] Dark mode improvements
+- [ ] Voice input for logging sets
+- [ ] Supersets and dropsets tracking
+- [ ] Rest-pause set support
+- [ ] Exercise substitution recommendations
+
+### Recently Completed ✅
+- ✅ Set notes functionality
+- ✅ Native back button support on mobile
+- ✅ Workout history detail view
+- ✅ Comprehensive text visibility fixes
+- ✅ Intelligent weight progression algorithm
 
 ---
 
 **Built with 💪 for serious lifters**
 
-Last Updated: December 2025
+Last Updated: January 2026
