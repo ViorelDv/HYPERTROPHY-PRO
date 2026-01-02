@@ -1058,6 +1058,14 @@ export default function HypertrophyApp() {
   const completeSet = (exerciseIndex, setIndex) => {
     const exercise = state.activeWorkout.exercises[exerciseIndex];
     const set = exercise.sets[setIndex];
+    
+    // If already completed, uncomplete it to allow editing
+    if (set.completed) {
+      updateSet(exerciseIndex, setIndex, 'completed', false);
+      return;
+    }
+    
+    // Otherwise, complete the set
     if (set.weight && set.reps) {
       setState(prev => {
         const history = prev.exerciseHistory[exercise.exerciseId] || [];
@@ -1887,21 +1895,21 @@ export default function HypertrophyApp() {
                         </div>
                         <div className="col-span-3">
                           <div className="relative">
-                            <input type="number" placeholder={set.suggestedWeight ? `${set.suggestedWeight}` : 'kg'} value={set.weight || ''} disabled={set.completed} onChange={e => updateSet(exIdx, setIdx, 'weight', parseFloat(e.target.value) || null)} className={`w-full p-2 border rounded-lg text-center text-sm font-semibold text-gray-900 disabled:bg-gray-100 ${set.suggestedWeight && !set.weight ? 'border-orange-300 bg-orange-50' : 'border-gray-200'}`} />
+                            <input type="number" placeholder={set.suggestedWeight ? `${set.suggestedWeight}` : 'kg'} value={set.weight || ''} onChange={e => updateSet(exIdx, setIdx, 'weight', parseFloat(e.target.value) || null)} className={`w-full p-2 border rounded-lg text-center text-sm font-semibold text-gray-900 ${set.completed ? 'bg-green-50' : ''} ${set.suggestedWeight && !set.weight && !set.completed ? 'border-orange-300 bg-orange-50' : 'border-gray-200'}`} />
                             {set.suggestedWeight && !set.completed && !set.weight && <span className="absolute -top-1 -right-1 bg-orange-500 text-white text-xs px-1 rounded">💡</span>}
                           </div>
                         </div>
                         <div className="col-span-3">
-                          <input type="number" placeholder={`${set.targetReps}`} value={set.reps || ''} disabled={set.completed} onChange={e => updateSet(exIdx, setIdx, 'reps', parseInt(e.target.value) || null)} className="w-full p-2 border border-gray-200 rounded-lg text-center text-sm font-semibold text-gray-900 disabled:bg-gray-100" />
+                          <input type="number" placeholder={`${set.targetReps}`} value={set.reps || ''} onChange={e => updateSet(exIdx, setIdx, 'reps', parseInt(e.target.value) || null)} className={`w-full p-2 border border-gray-200 rounded-lg text-center text-sm font-semibold text-gray-900 ${set.completed ? 'bg-green-50' : ''}`} />
                         </div>
                         <div className="col-span-3">
-                          <select value={set.rir ?? ''} disabled={set.completed} onChange={e => updateSet(exIdx, setIdx, 'rir', parseInt(e.target.value))} className="w-full p-2 border border-gray-200 rounded-lg text-center text-sm font-semibold text-gray-900 disabled:bg-gray-100">
+                          <select value={set.rir ?? ''} onChange={e => updateSet(exIdx, setIdx, 'rir', parseInt(e.target.value))} className={`w-full p-2 border border-gray-200 rounded-lg text-center text-sm font-semibold text-gray-900 ${set.completed ? 'bg-green-50' : ''}`}>
                             <option value="">{set.targetRIR}</option>
                             {[0, 1, 2, 3, 4, 5].map(r => <option key={r} value={r}>{r}</option>)}
                           </select>
                         </div>
                         <div className="col-span-2">
-                          <button onClick={() => completeSet(exIdx, setIdx)} disabled={set.completed || !set.weight || !set.reps} className={`w-full p-2 rounded-lg ${set.completed ? 'bg-green-500 text-white' : 'bg-orange-500 text-white hover:bg-orange-600 disabled:bg-gray-200 disabled:text-gray-400'}`}>
+                          <button onClick={() => completeSet(exIdx, setIdx)} disabled={!set.completed && (!set.weight || !set.reps)} className={`w-full p-2 rounded-lg ${set.completed ? 'bg-green-500 text-white hover:bg-green-600' : 'bg-orange-500 text-white hover:bg-orange-600 disabled:bg-gray-200 disabled:text-gray-400'}`}>
                             <Check className="w-4 h-4 mx-auto" />
                           </button>
                         </div>
@@ -1911,9 +1919,8 @@ export default function HypertrophyApp() {
                           type="text" 
                           placeholder="Add notes (optional)..."
                           value={set.notes || ''}
-                          disabled={set.completed}
                           onChange={e => updateSet(exIdx, setIdx, 'notes', e.target.value)}
-                          className="w-full p-2 text-xs border border-gray-200 rounded-lg text-gray-700 placeholder-gray-400 disabled:bg-gray-50 disabled:text-gray-500"
+                          className={`w-full p-2 text-xs border border-gray-200 rounded-lg text-gray-700 placeholder-gray-400 ${set.completed ? 'bg-green-50' : ''}`}
                         />
                       </div>
                     </div>
