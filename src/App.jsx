@@ -1381,7 +1381,7 @@ export default function HypertrophyApp() {
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-1">Template Name</label>
-                  <input type="text" value={newTemplateName} onChange={e => setTemplateModalState(s => ({ ...s, newTemplateName: e.target.value }))} className="w-full p-3 border border-gray-200 rounded-xl" />
+                  <input type="text" value={newTemplateName} onChange={e => setTemplateModalState(s => ({ ...s, newTemplateName: e.target.value }))} className="w-full p-3 border border-gray-200 rounded-xl text-gray-900" />
                 </div>
                 <div className="space-y-3">
                   <div className="flex justify-between items-center">
@@ -1441,17 +1441,17 @@ export default function HypertrophyApp() {
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-1">Exercise Name</label>
-                  <input type="text" value={exerciseData.name} onChange={e => setExerciseModalState(s => ({ ...s, exerciseData: { ...s.exerciseData, name: e.target.value } }))} placeholder="e.g., Incline Smith Machine Press" className="w-full p-3 border border-gray-200 rounded-xl" />
+                  <input type="text" value={exerciseData.name} onChange={e => setExerciseModalState(s => ({ ...s, exerciseData: { ...s.exerciseData, name: e.target.value } }))} placeholder="e.g., Incline Smith Machine Press" className="w-full p-3 border border-gray-200 rounded-xl text-gray-900" />
                 </div>
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-1">Target Muscle</label>
-                  <select value={exerciseData.primary} onChange={e => setExerciseModalState(s => ({ ...s, exerciseData: { ...s.exerciseData, primary: e.target.value } }))} className="w-full p-3 border border-gray-200 rounded-xl">
+                  <select value={exerciseData.primary} onChange={e => setExerciseModalState(s => ({ ...s, exerciseData: { ...s.exerciseData, primary: e.target.value } }))} className="w-full p-3 border border-gray-200 rounded-xl text-gray-900">
                     {Object.entries(MUSCLE_LABELS).map(([key, label]) => (<option key={key} value={key}>{label}</option>))}
                   </select>
                 </div>
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-1">Equipment</label>
-                  <select value={exerciseData.equipment} onChange={e => setExerciseModalState(s => ({ ...s, exerciseData: { ...s.exerciseData, equipment: e.target.value } }))} className="w-full p-3 border border-gray-200 rounded-xl">
+                  <select value={exerciseData.equipment} onChange={e => setExerciseModalState(s => ({ ...s, exerciseData: { ...s.exerciseData, equipment: e.target.value } }))} className="w-full p-3 border border-gray-200 rounded-xl text-gray-900">
                     {EQUIPMENT_OPTIONS.map(eq => (<option key={eq} value={eq}>{eq.charAt(0).toUpperCase() + eq.slice(1)}</option>))}
                   </select>
                 </div>
@@ -1462,7 +1462,7 @@ export default function HypertrophyApp() {
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-1">Filter by Muscle</label>
-                  <select value={selectedMuscle} onChange={e => setExerciseModalState(s => ({ ...s, selectedMuscle: e.target.value }))} className="w-full p-3 border border-gray-200 rounded-xl">
+                  <select value={selectedMuscle} onChange={e => setExerciseModalState(s => ({ ...s, selectedMuscle: e.target.value }))} className="w-full p-3 border border-gray-200 rounded-xl text-gray-900">
                     {Object.entries(MUSCLE_LABELS).map(([key, label]) => (<option key={key} value={key}>{label}</option>))}
                   </select>
                 </div>
@@ -1529,7 +1529,7 @@ export default function HypertrophyApp() {
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-1">Select Muscle Group</label>
-                  <select value={selectedMuscle} onChange={e => setExerciseModalState(s => ({ ...s, selectedMuscle: e.target.value }))} className="w-full p-3 border border-gray-200 rounded-xl">
+                  <select value={selectedMuscle} onChange={e => setExerciseModalState(s => ({ ...s, selectedMuscle: e.target.value }))} className="w-full p-3 border border-gray-200 rounded-xl text-gray-900">
                     {Object.entries(MUSCLE_LABELS).map(([key, label]) => (<option key={key} value={key}>{label}</option>))}
                   </select>
                 </div>
@@ -1876,15 +1876,15 @@ export default function HypertrophyApp() {
                       </div>
                       <div className="col-span-3">
                         <div className="relative">
-                          <input type="number" placeholder={set.suggestedWeight ? `${set.suggestedWeight}` : 'kg'} value={set.weight || ''} disabled={set.completed} onChange={e => updateSet(exIdx, setIdx, 'weight', parseFloat(e.target.value) || null)} className={`w-full p-2 border rounded-lg text-center text-sm font-semibold disabled:bg-gray-100 ${set.suggestedWeight && !set.weight ? 'border-orange-300 bg-orange-50' : 'border-gray-200'}`} />
+                          <input type="number" placeholder={set.suggestedWeight ? `${set.suggestedWeight}` : 'kg'} value={set.weight || ''} disabled={set.completed} onChange={e => updateSet(exIdx, setIdx, 'weight', parseFloat(e.target.value) || null)} className={`w-full p-2 border rounded-lg text-center text-sm font-semibold text-gray-900 disabled:bg-gray-100 ${set.suggestedWeight && !set.weight ? 'border-orange-300 bg-orange-50' : 'border-gray-200'}`} />
                           {set.suggestedWeight && !set.completed && !set.weight && <span className="absolute -top-1 -right-1 bg-orange-500 text-white text-xs px-1 rounded">💡</span>}
                         </div>
                       </div>
                       <div className="col-span-3">
-                        <input type="number" placeholder={`${set.targetReps}`} value={set.reps || ''} disabled={set.completed} onChange={e => updateSet(exIdx, setIdx, 'reps', parseInt(e.target.value) || null)} className="w-full p-2 border border-gray-200 rounded-lg text-center text-sm font-semibold disabled:bg-gray-100" />
+                        <input type="number" placeholder={`${set.targetReps}`} value={set.reps || ''} disabled={set.completed} onChange={e => updateSet(exIdx, setIdx, 'reps', parseInt(e.target.value) || null)} className="w-full p-2 border border-gray-200 rounded-lg text-center text-sm font-semibold text-gray-900 disabled:bg-gray-100" />
                       </div>
                       <div className="col-span-3">
-                        <select value={set.rir ?? ''} disabled={set.completed} onChange={e => updateSet(exIdx, setIdx, 'rir', parseInt(e.target.value))} className="w-full p-2 border border-gray-200 rounded-lg text-center text-sm font-semibold disabled:bg-gray-100">
+                        <select value={set.rir ?? ''} disabled={set.completed} onChange={e => updateSet(exIdx, setIdx, 'rir', parseInt(e.target.value))} className="w-full p-2 border border-gray-200 rounded-lg text-center text-sm font-semibold text-gray-900 disabled:bg-gray-100">
                           <option value="">{set.targetRIR}</option>
                           {[0, 1, 2, 3, 4, 5].map(r => <option key={r} value={r}>{r}</option>)}
                         </select>
@@ -1958,7 +1958,7 @@ export default function HypertrophyApp() {
         {exercisePRs.length > 0 && (
           <div className="bg-white rounded-xl p-4 border border-gray-100">
             <h4 className="font-semibold text-gray-700 mb-3">📈 Exercise Progression</h4>
-            <select value={selectedExerciseForChart || ''} onChange={e => setSelectedExerciseForChart(e.target.value)} className="w-full p-3 border border-gray-200 rounded-xl mb-4">
+            <select value={selectedExerciseForChart || ''} onChange={e => setSelectedExerciseForChart(e.target.value)} className="w-full p-3 border border-gray-200 rounded-xl text-gray-900 mb-4">
               <option value="">Select an exercise...</option>
               {exercisePRs.map(ex => (<option key={ex.id} value={ex.id}>{ex.name}</option>))}
             </select>
