@@ -784,6 +784,7 @@ export default function HypertrophyApp() {
   });
   const [selectedExerciseForChart, setSelectedExerciseForChart] = useState(null);
   const [selectedWorkoutDetail, setSelectedWorkoutDetail] = useState(null);
+  const [viewHistory, setViewHistory] = useState(['home']);
   const fileInputRef = useRef(null);
 
   const getAllTemplates = () => ({ ...DEFAULT_TEMPLATES, ...state.customTemplates });
@@ -796,9 +797,68 @@ export default function HypertrophyApp() {
     return combined;
   };
 
+  // Navigate to a new view and track history
+  const navigateToView = (view) => {
+    if (view !== currentView) {
+      setViewHistory(prev => [...prev, view]);
+      setCurrentView(view);
+    }
+  };
+
   useEffect(() => {
     localStorage.setItem('hypertrophy_state_v3', JSON.stringify(state));
   }, [state]);
+
+  // Handle back button for modals
+  useEffect(() => {
+    const handlePopState = () => {
+      if (templateModalState.isOpen) {
+        setTemplateModalState(s => ({ ...s, isOpen: false }));
+      } else if (exerciseModalState.isOpen) {
+        setExerciseModalState(s => ({ ...s, isOpen: false }));
+      } else if (selectedWorkoutDetail) {
+        setSelectedWorkoutDetail(null);
+      }
+    };
+
+    if (templateModalState.isOpen || exerciseModalState.isOpen || selectedWorkoutDetail) {
+      window.history.pushState({ modal: true }, '');
+      window.addEventListener('popstate', handlePopState);
+      return () => {
+        window.removeEventListener('popstate', handlePopState);
+      };
+    }
+  }, [templateModalState.isOpen, exerciseModalState.isOpen, selectedWorkoutDetail]);
+
+  // Handle back button for view navigation
+  useEffect(() => {
+    const handlePopState = (event) => {
+      if (currentView === 'active_workout') {
+        // Don't allow back during active workout
+        window.history.pushState({ view: currentView }, '');
+        return;
+      }
+      
+      // Navigate to the previous view from history
+      setViewHistory(prev => {
+        if (prev.length > 1) {
+          const newHistory = prev.slice(0, -1);
+          const previousView = newHistory[newHistory.length - 1];
+          setCurrentView(previousView);
+          return newHistory;
+        }
+        return prev;
+      });
+    };
+
+    if (currentView !== 'home' || viewHistory.length > 1) {
+      window.history.pushState({ view: currentView }, '');
+      window.addEventListener('popstate', handlePopState);
+      return () => {
+        window.removeEventListener('popstate', handlePopState);
+      };
+    }
+  }, [currentView, viewHistory]);
 
   useEffect(() => {
     let interval;
@@ -942,7 +1002,7 @@ export default function HypertrophyApp() {
   const startMesocycle = (template, weeks, volumeGoal) => {
     const meso = generateMesocycle(template, weeks, volumeGoal);
     setState(prev => ({ ...prev, mesocycle: meso }));
-    setCurrentView('workout');
+    navigateToView('workout');
   };
 
   const getCurrentWorkout = () => {
@@ -971,7 +1031,7 @@ export default function HypertrophyApp() {
       })),
     };
     setState(prev => ({ ...prev, activeWorkout: workoutWithSuggestions }));
-    setCurrentView('active_workout');
+    navigateToView('active_workout');
   };
 
   const updateSet = (exerciseIndex, setIndex, field, value) => {
@@ -1135,6 +1195,7 @@ export default function HypertrophyApp() {
       return { ...prev, mesocycle: newMeso, activeWorkout: null, history: [...prev.history, completedWorkout] };
     });
     setWorkoutElapsedTime(0);
+    setViewHistory(['home', 'workout']);
     setCurrentView('workout');
   };
 
@@ -1518,7 +1579,7 @@ export default function HypertrophyApp() {
             <p className="font-bold text-lg">{getCurrentWorkout()?.name || 'Complete!'}</p>
             <p className="text-sm text-orange-100">{state.mesocycle.weeksData[state.mesocycle.currentWeek - 1]?.isDeload ? '🔄 Deload Week' : `Day ${state.mesocycle.currentDay}`}</p>
           </div>
-          <button onClick={() => setCurrentView('workout')} className="w-full bg-white text-orange-600 font-bold py-3 rounded-xl flex items-center justify-center gap-2 hover:bg-orange-50">
+          <button onClick={() => navigateToView('workout')} className="w-full bg-white text-orange-600 font-bold py-3 rounded-xl flex items-center justify-center gap-2 hover:bg-orange-50">
             <Play className="w-5 h-5" /> Continue Training
           </button>
         </div>
@@ -1527,7 +1588,7 @@ export default function HypertrophyApp() {
           <Target className="w-12 h-12 text-gray-400 mx-auto mb-3" />
           <h3 className="font-bold text-gray-700 mb-2">No Active Program</h3>
           <p className="text-gray-500 text-sm mb-4">Start a new mesocycle to begin training</p>
-          <button onClick={() => setCurrentView('new_meso')} className="mt-4 bg-orange-500 text-white px-6 py-2 rounded-xl">Create Program</button>
+          <button onClick={() => navigateToView('new_meso')} className="mt-4 bg-orange-500 text-white px-6 py-2 rounded-xl">Create Program</button>
         </div>
       )}
       <div className="grid grid-cols-3 gap-3">
@@ -1575,7 +1636,7 @@ export default function HypertrophyApp() {
     return (
       <div className="p-6 space-y-6">
         <div className="flex items-center gap-3 mb-4">
-          <button onClick={() => setCurrentView('home')} className="p-2 hover:bg-gray-100 rounded-lg"><ChevronLeft className="w-5 h-5" /></button>
+          <button onClick={() => window.history.back()} className="p-2 hover:bg-gray-100 rounded-lg"><ChevronLeft className="w-5 h-5" /></button>
           <h2 className="text-xl font-bold">New Mesocycle</h2>
         </div>
         <div>
@@ -1629,7 +1690,7 @@ export default function HypertrophyApp() {
 
   const renderWorkout = () => {
     if (!state.mesocycle) {
-      return (<div className="p-6 text-center"><p className="text-gray-700 mb-4">No active program. Start a new mesocycle first.</p><button onClick={() => setCurrentView('new_meso')} className="mt-4 bg-orange-500 text-white px-6 py-2 rounded-xl">Create Program</button></div>);
+      return (<div className="p-6 text-center"><p className="text-gray-700 mb-4">No active program. Start a new mesocycle first.</p><button onClick={() => navigateToView('new_meso')} className="mt-4 bg-orange-500 text-white px-6 py-2 rounded-xl">Create Program</button></div>);
     }
     const workout = getCurrentWorkout();
     const week = state.mesocycle.weeksData[state.mesocycle.currentWeek - 1];
@@ -1641,7 +1702,7 @@ export default function HypertrophyApp() {
             <h2 className="text-2xl font-bold text-gray-900">{workout?.name || 'Program Complete!'}</h2>
             {week?.isDeload && <span className="inline-block bg-blue-100 text-blue-700 text-xs font-bold px-2 py-1 rounded mt-1">DELOAD WEEK</span>}
           </div>
-          <button onClick={() => setCurrentView('home')} className="p-2 hover:bg-gray-100 rounded-lg"><X className="w-5 h-5" /></button>
+          <button onClick={() => window.history.back()} className="p-2 hover:bg-gray-100 rounded-lg"><X className="w-5 h-5" /></button>
         </div>
         <div className="flex gap-1">
           {week?.workouts.map((w, i) => (<div key={i} className={`flex-1 h-2 rounded-full ${w.completed ? 'bg-green-500' : i === state.mesocycle.currentDay - 1 ? 'bg-orange-500' : 'bg-gray-200'}`} />))}
@@ -1679,7 +1740,7 @@ export default function HypertrophyApp() {
             <Award className="w-16 h-16 text-green-500 mx-auto mb-4" />
             <h3 className="text-xl font-bold text-gray-900 mb-2">{state.mesocycle.currentWeek >= state.mesocycle.weeks ? 'Mesocycle Complete!' : 'Workout Complete!'}</h3>
             <p className="text-gray-500 mb-4">Great work! Rest up for your next session.</p>
-            {state.mesocycle.currentWeek >= state.mesocycle.weeks && (<button onClick={() => setCurrentView('new_meso')} className="bg-orange-500 text-white px-6 py-3 rounded-xl font-bold">Start New Mesocycle</button>)}
+            {state.mesocycle.currentWeek >= state.mesocycle.weeks && (<button onClick={() => navigateToView('new_meso')} className="bg-orange-500 text-white px-6 py-3 rounded-xl font-bold">Start New Mesocycle</button>)}
           </div>
         )}
       </div>
@@ -2056,7 +2117,7 @@ export default function HypertrophyApp() {
           <div className="flex items-center gap-3"><Copy className="w-5 h-5 text-blue-600" /><span className="font-semibold text-gray-900">Manage Custom Templates</span></div>
           <ChevronRight className="w-5 h-5 text-gray-400" />
         </button>
-        <button onClick={() => { if (confirm('Reset all data? This cannot be undone.')) { setState(createInitialState()); setCurrentView('home'); } }} className="w-full bg-red-50 text-red-600 font-semibold py-3 rounded-xl border border-red-200 flex items-center justify-center gap-2">
+        <button onClick={() => { if (confirm('Reset all data? This cannot be undone.')) { setState(createInitialState()); setViewHistory(['home']); setCurrentView('home'); } }} className="w-full bg-red-50 text-red-600 font-semibold py-3 rounded-xl border border-red-200 flex items-center justify-center gap-2">
           <RotateCcw className="w-4 h-4" /> Reset All Data
         </button>
       </div>
@@ -2099,7 +2160,7 @@ export default function HypertrophyApp() {
               { id: 'progress', icon: BarChart3, label: 'Progress' },
               { id: 'settings', icon: Settings, label: 'Settings' },
             ].map(item => (
-              <button key={item.id} onClick={() => setCurrentView(item.id)} className={`flex flex-col items-center py-2 px-4 rounded-lg ${currentView === item.id ? 'text-orange-500' : 'text-gray-400 hover:text-gray-600'}`}>
+              <button key={item.id} onClick={() => navigateToView(item.id)} className={`flex flex-col items-center py-2 px-4 rounded-lg ${currentView === item.id ? 'text-orange-500' : 'text-gray-400 hover:text-gray-600'}`}>
                 <item.icon className="w-6 h-6" /><span className="text-xs mt-1 font-medium">{item.label}</span>
               </button>
             ))}
