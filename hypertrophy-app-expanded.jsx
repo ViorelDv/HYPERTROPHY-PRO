@@ -1,6 +1,20 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area } from 'recharts';
 import { Play, Check, ChevronRight, ChevronLeft, Plus, Minus, BarChart3, Dumbbell, Calendar, Settings, Home, TrendingUp, Target, Flame, Clock, Award, Info, X, Edit3, RotateCcw, Zap, Heart, Activity, Trash2, Copy, Save, Download, Upload, Cloud, Share2 } from 'lucide-react';
+import { useToast, ToastContainer } from './src/components/Toast';
+import ConfirmModal from './src/components/ConfirmModal';
+import {
+  createInitialState,
+  calculateSuggestedWeight,
+  getBestPerformance,
+  formatDuration,
+  calculateE1RM,
+  getProgressionData as getProgressionDataHelper,
+  getOverallVolumeData as getOverallVolumeDataHelper,
+  validateImportData,
+  getTotalCompletedSets,
+  getAverageWorkoutDuration,
+} from './src/utils/helpers';
 
 const DEFAULT_EXERCISES = {
   chest: [
@@ -681,48 +695,7 @@ const VOLUME_LANDMARKS = {
   forearms: { mev: 4, mav: 6, mrv: 10 },
 };
 
-const createInitialState = () => ({
-  profile: { name: '', experience: 'intermediate', gender: 'male' },
-  mesocycle: null,
-  history: [],
-  activeWorkout: null,
-  settings: { restTimer: 120, autoProgress: true, weightIncrement: 2.5 },
-  customExercises: {},
-  customTemplates: {},
-  exerciseHistory: {},
-});
-
-const calculateSuggestedWeight = (exerciseHistory, targetReps, targetRIR, settings) => {
-  if (!exerciseHistory || exerciseHistory.length === 0) return null;
-  const lastPerformance = exerciseHistory[exerciseHistory.length - 1];
-  if (!lastPerformance || !lastPerformance.weight) return null;
-  const { weight, rir } = lastPerformance;
-  const increment = settings?.weightIncrement || 2.5;
-  let suggestedWeight = weight;
-  if (rir !== null && rir !== undefined) {
-    const rirDiff = rir - targetRIR;
-    if (rirDiff >= 2) suggestedWeight = weight + increment * 2;
-    else if (rirDiff >= 1) suggestedWeight = weight + increment;
-    else if (rirDiff <= -2) suggestedWeight = weight - increment;
-  }
-  return Math.max(0, suggestedWeight);
-};
-
-const getBestPerformance = (exerciseHistory) => {
-  if (!exerciseHistory || exerciseHistory.length === 0) return null;
-  let best = null;
-  let bestE1RM = 0;
-  exerciseHistory.forEach(entry => {
-    if (entry.weight && entry.reps) {
-      const e1rm = entry.weight * (36 / (37 - Math.min(entry.reps, 36)));
-      if (e1rm > bestE1RM) {
-        bestE1RM = e1rm;
-        best = entry;
-      }
-    }
-  });
-  return best ? { ...best, e1rm: Math.round(bestE1RM * 10) / 10 } : null;
-};
+// createInitialState, calculateSuggestedWeight, getBestPerformance imported from src/utils/helpers.js
 
 const ProgressionChart = ({ data, title, dataKey, color }) => {
   if (!data || data.length < 2) {
@@ -783,17 +756,35 @@ export default function HypertrophyApp() {
     isOpen: false, mode: 'view', selectedTemplate: null, editingTemplate: null, newTemplateName: '',
   });
   const [selectedExerciseForChart, setSelectedExerciseForChart] = useState(null);
+  const [confirmState, setConfirmState] = useState({ isOpen: false, title: '', message: '', confirmLabel: 'Confirm', variant: 'danger', onConfirm: null });
+  const { toasts, showToast, dismissToast } = useToast();
   const fileInputRef = useRef(null);
 
-  const getAllTemplates = () => ({ ...DEFAULT_TEMPLATES, ...state.customTemplates });
+  const showConfirm = useCallback((title, message, onConfirm, options = {}) => {
+    setConfirmState({
+      isOpen: true,
+      title,
+      message,
+      confirmLabel: options.confirmLabel || 'Confirm',
+      variant: options.variant || 'danger',
+      onConfirm: () => {
+        setConfirmState(s => ({ ...s, isOpen: false }));
+        onConfirm();
+      },
+    });
+  }, []);
+
+  const allTemplates = useMemo(() => ({ ...DEFAULT_TEMPLATES, ...state.customTemplates }), [state.customTemplates]);
+  const getAllTemplates = useCallback(() => allTemplates, [allTemplates]);
   
-  const getExerciseDatabase = () => {
+  const exerciseDatabase = useMemo(() => {
     const combined = {};
     Object.keys(DEFAULT_EXERCISES).forEach(muscle => {
       combined[muscle] = [...DEFAULT_EXERCISES[muscle], ...(state.customExercises[muscle] || [])];
     });
     return combined;
-  };
+  }, [state.customExercises]);
+  const getExerciseDatabase = useCallback(() => exerciseDatabase, [exerciseDatabase]);
 
   useEffect(() => {
     localStorage.setItem('hypertrophy_state_v3', JSON.stringify(state));
@@ -1137,27 +1128,14 @@ export default function HypertrophyApp() {
     setCurrentView('workout');
   };
 
-  const getProgressionData = (exerciseId) => {
+  const getProgressionData = useCallback((exerciseId) => {
     const history = state.exerciseHistory[exerciseId] || [];
-    return history.map((entry) => ({
-      date: new Date(entry.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-      weight: entry.weight,
-      reps: entry.reps,
-      e1rm: Math.round(entry.weight * (36 / (37 - Math.min(entry.reps, 36))) * 10) / 10,
-      volume: entry.weight * entry.reps,
-    }));
-  };
+    return getProgressionDataHelper(history);
+  }, [state.exerciseHistory]);
 
-  const getOverallVolumeData = () => {
-    const volumeByDate = {};
-    state.history.forEach(workout => {
-      const date = new Date(workout.startTime).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-      const volume = workout.exercises.reduce((sum, ex) => 
-        sum + ex.sets.filter(s => s.completed).reduce((setSum, s) => setSum + (s.weight || 0) * (s.reps || 0), 0), 0);
-      volumeByDate[date] = (volumeByDate[date] || 0) + volume;
-    });
-    return Object.entries(volumeByDate).map(([date, volume]) => ({ date, volume: Math.round(volume) }));
-  };
+  const getOverallVolumeData = useCallback(() => {
+    return getOverallVolumeDataHelper(state.history);
+  }, [state.history]);
 
   const renderTemplateModal = () => {
     if (!templateModalState.isOpen) return null;
@@ -1448,13 +1426,13 @@ export default function HypertrophyApp() {
         <div className="bg-white rounded-xl p-4 border border-gray-100 shadow-sm">
           <div className="flex items-center gap-3">
             <div className="bg-green-100 p-2 rounded-lg"><TrendingUp className="w-5 h-5 text-green-600" /></div>
-            <div><p className="text-2xl font-black text-gray-900">{state.history.reduce((acc, w) => acc + w.exercises.reduce((a, e) => a + e.sets.filter(s => s.completed).length, 0), 0)}</p><p className="text-xs text-gray-500">Total Sets</p></div>
+            <div><p className="text-2xl font-black text-gray-900">{getTotalCompletedSets(state.history)}</p><p className="text-xs text-gray-500">Total Sets</p></div>
           </div>
         </div>
         <div className="bg-white rounded-xl p-4 border border-gray-100 shadow-sm">
           <div className="flex items-center gap-3">
             <div className="bg-purple-100 p-2 rounded-lg"><Clock className="w-5 h-5 text-purple-600" /></div>
-            <div><p className="text-2xl font-black text-gray-900">{state.history.length > 0 ? Math.round(state.history.filter(w => w.durationSeconds).reduce((acc, w) => acc + (w.durationSeconds || 0), 0) / Math.max(1, state.history.filter(w => w.durationSeconds).length) / 60) : 0}</p><p className="text-xs text-gray-500">Avg Min</p></div>
+            <div><p className="text-2xl font-black text-gray-900">{getAverageWorkoutDuration(state.history)}</p><p className="text-xs text-gray-500">Avg Min</p></div>
           </div>
         </div>
       </div>
@@ -1625,13 +1603,7 @@ export default function HypertrophyApp() {
       );
     }
     const allCompleted = state.activeWorkout.exercises.every(ex => ex.sets.every(s => s.completed));
-    const formatDuration = (seconds) => {
-      const hrs = Math.floor(seconds / 3600);
-      const mins = Math.floor((seconds % 3600) / 60);
-      const secs = seconds % 60;
-      if (hrs > 0) return `${hrs}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-      return `${mins}:${secs.toString().padStart(2, '0')}`;
-    };
+    // formatDuration imported from helpers
     return (
       <div className="pb-32">
         <div className="bg-gradient-to-r from-orange-500 to-red-600 p-6 text-white">
@@ -1896,14 +1868,21 @@ export default function HypertrophyApp() {
       reader.onload = (e) => {
         try {
           const imported = JSON.parse(e.target.result);
-          if (imported && typeof imported === 'object') {
-            if (confirm('This will replace all your current data. Continue?')) {
-              setState({ ...createInitialState(), ...imported });
-              alert('Data imported successfully!');
-            }
+          if (imported && typeof imported === 'object' && validateImportData(imported)) {
+            showConfirm(
+              'Import Data',
+              'This will replace all your current data. Continue?',
+              () => {
+                setState({ ...createInitialState(), ...imported });
+                showToast('Data imported successfully!', 'success');
+              },
+              { confirmLabel: 'Import', variant: 'warning' }
+            );
+          } else {
+            showToast('Invalid backup file format.', 'error');
           }
         } catch (err) {
-          alert('Invalid backup file. Please select a valid JSON backup.');
+          showToast('Invalid backup file. Please select a valid JSON backup.', 'error');
         }
       };
       reader.readAsText(file);
@@ -1919,7 +1898,7 @@ export default function HypertrophyApp() {
     };
     const copyToClipboard = async () => {
       const dataStr = JSON.stringify(state);
-      try { await navigator.clipboard.writeText(dataStr); alert('Data copied to clipboard! You can paste this into a note or document for backup.'); } catch (err) { alert('Failed to copy. Try using Export instead.'); }
+      try { await navigator.clipboard.writeText(dataStr); showToast('Data copied to clipboard!', 'success'); } catch (err) { showToast('Failed to copy. Try using Export instead.', 'error'); }
     };
     return (
     <div className="p-6 space-y-6">
@@ -1963,7 +1942,7 @@ export default function HypertrophyApp() {
           <div className="flex items-center gap-3"><Copy className="w-5 h-5 text-blue-600" /><span className="font-semibold">Manage Custom Templates</span></div>
           <ChevronRight className="w-5 h-5 text-gray-400" />
         </button>
-        <button onClick={() => { if (confirm('Reset all data? This cannot be undone.')) { setState(createInitialState()); setCurrentView('home'); } }} className="w-full bg-red-50 text-red-600 font-semibold py-3 rounded-xl border border-red-200 flex items-center justify-center gap-2">
+        <button onClick={() => showConfirm('Reset All Data', 'This will permanently delete all your workout history, exercises, and settings. This cannot be undone.', () => { setState(createInitialState()); setCurrentView('home'); showToast('All data has been reset.', 'info'); }, { confirmLabel: 'Reset Everything', variant: 'danger' })} className="w-full bg-red-50 text-red-600 font-semibold py-3 rounded-xl border border-red-200 flex items-center justify-center gap-2">
           <RotateCcw className="w-4 h-4" /> Reset All Data
         </button>
       </div>
@@ -1996,6 +1975,16 @@ export default function HypertrophyApp() {
       <div className="pb-20">{renderContent()}</div>
       {renderExerciseModal()}
       {renderTemplateModal()}
+      <ToastContainer toasts={toasts} onDismiss={dismissToast} />
+      <ConfirmModal
+        isOpen={confirmState.isOpen}
+        title={confirmState.title}
+        message={confirmState.message}
+        confirmLabel={confirmState.confirmLabel}
+        variant={confirmState.variant}
+        onConfirm={confirmState.onConfirm}
+        onCancel={() => setConfirmState(s => ({ ...s, isOpen: false }))}
+      />
       {currentView !== 'active_workout' && (
         <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-4 py-2">
           <div className="flex justify-around">
