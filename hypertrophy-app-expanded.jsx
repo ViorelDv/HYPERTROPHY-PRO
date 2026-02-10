@@ -14,6 +14,8 @@ import {
   validateImportData,
   getTotalCompletedSets,
   getAverageWorkoutDuration,
+  debounce,
+  generateId,
 } from './src/utils/helpers';
 
 const DEFAULT_EXERCISES = {
@@ -786,9 +788,39 @@ export default function HypertrophyApp() {
   }, [state.customExercises]);
   const getExerciseDatabase = useCallback(() => exerciseDatabase, [exerciseDatabase]);
 
+  // Debounced localStorage persistence (avoids thrashing on rapid state changes)
+  const debouncedSave = useMemo(
+    () => debounce((data) => {
+      try {
+        localStorage.setItem('hypertrophy_state_v3', JSON.stringify(data));
+      } catch (e) {
+        console.warn('Failed to save to localStorage:', e);
+      }
+    }, 500),
+    []
+  );
+
   useEffect(() => {
-    localStorage.setItem('hypertrophy_state_v3', JSON.stringify(state));
-  }, [state]);
+    debouncedSave(state);
+    return () => debouncedSave.cancel();
+  }, [state, debouncedSave]);
+
+  // Close modals on Escape key press
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        if (confirmState.isOpen) {
+          setConfirmState(s => ({ ...s, isOpen: false }));
+        } else if (exerciseModalState.isOpen) {
+          setExerciseModalState(s => ({ ...s, isOpen: false }));
+        } else if (templateModalState.isOpen) {
+          setTemplateModalState(s => ({ ...s, isOpen: false }));
+        }
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [confirmState.isOpen, exerciseModalState.isOpen, templateModalState.isOpen]);
 
   useEffect(() => {
     let interval;

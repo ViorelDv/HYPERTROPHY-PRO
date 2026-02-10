@@ -164,3 +164,37 @@ export const getAverageWorkoutDuration = (history) => {
   const total = withDuration.reduce((acc, w) => acc + w.durationSeconds, 0);
   return Math.round(total / withDuration.length / 60);
 };
+
+/**
+ * Creates a debounced version of a function that delays invocation
+ * until after `delay` ms have elapsed since the last call.
+ * @param {Function} fn - The function to debounce
+ * @param {number} delay - Delay in milliseconds
+ * @returns {Function} Debounced function with a `.cancel()` method
+ */
+export const debounce = (fn, delay) => {
+  let timer = null;
+  const debounced = (...args) => {
+    if (timer) clearTimeout(timer);
+    timer = setTimeout(() => {
+      fn(...args);
+      timer = null;
+    }, delay);
+  };
+  debounced.cancel = () => {
+    if (timer) {
+      clearTimeout(timer);
+      timer = null;
+    }
+  };
+  return debounced;
+};
+
+/**
+ * Generates a stable unique ID string.
+ * @param {string} prefix - Optional prefix
+ * @returns {string} Unique ID
+ */
+export const generateId = (prefix = '') => {
+  return `${prefix}${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
+};

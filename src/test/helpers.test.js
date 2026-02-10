@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import {
   createInitialState,
   calculateSuggestedWeight,
@@ -11,6 +11,8 @@ import {
   validateImportData,
   getTotalCompletedSets,
   getAverageWorkoutDuration,
+  debounce,
+  generateId,
 } from '../utils/helpers';
 
 describe('createInitialState', () => {
@@ -351,5 +353,101 @@ describe('getAverageWorkoutDuration', () => {
       { exercises: [] },
     ];
     expect(getAverageWorkoutDuration(history)).toBe(60);
+  });
+});
+
+describe('debounce', () => {
+  it('should delay function execution', () => {
+    vi.useFakeTimers();
+    const fn = vi.fn();
+    const debounced = debounce(fn, 200);
+
+    debounced('a');
+    expect(fn).not.toHaveBeenCalled();
+
+    vi.advanceTimersByTime(200);
+    expect(fn).toHaveBeenCalledWith('a');
+    expect(fn).toHaveBeenCalledTimes(1);
+    vi.useRealTimers();
+  });
+
+  it('should reset the timer on subsequent calls', () => {
+    vi.useFakeTimers();
+    const fn = vi.fn();
+    const debounced = debounce(fn, 200);
+
+    debounced('a');
+    vi.advanceTimersByTime(100);
+    debounced('b');
+    vi.advanceTimersByTime(100);
+    // Only 100ms since second call – should not have fired yet
+    expect(fn).not.toHaveBeenCalled();
+
+    vi.advanceTimersByTime(100);
+    expect(fn).toHaveBeenCalledWith('b');
+    expect(fn).toHaveBeenCalledTimes(1);
+    vi.useRealTimers();
+  });
+
+  it('should support cancel()', () => {
+    vi.useFakeTimers();
+    const fn = vi.fn();
+    const debounced = debounce(fn, 200);
+
+    debounced();
+    debounced.cancel();
+    vi.advanceTimersByTime(300);
+    expect(fn).not.toHaveBeenCalled();
+    vi.useRealTimers();
+  });
+
+  it('should pass all arguments through to the original function', () => {
+    vi.useFakeTimers();
+    const fn = vi.fn();
+    const debounced = debounce(fn, 50);
+
+    debounced(1, 'two', { three: 3 });
+    vi.advanceTimersByTime(50);
+    expect(fn).toHaveBeenCalledWith(1, 'two', { three: 3 });
+    vi.useRealTimers();
+  });
+
+  it('cancel should be safe to call when no timer is pending', () => {
+    const fn = vi.fn();
+    const debounced = debounce(fn, 100);
+    expect(() => debounced.cancel()).not.toThrow();
+  });
+});
+
+describe('generateId', () => {
+  it('should return a non-empty string', () => {
+    const id = generateId();
+    expect(typeof id).toBe('string');
+    expect(id.length).toBeGreaterThan(0);
+  });
+
+  it('should include the prefix when provided', () => {
+    const id = generateId('exercise_');
+    expect(id.startsWith('exercise_')).toBe(true);
+  });
+
+  it('should generate unique IDs on successive calls', () => {
+    const ids = new Set(Array.from({ length: 50 }, () => generateId()));
+    expect(ids.size).toBe(50);
+  });
+
+  it('should work with an empty prefix', () => {
+    const id = generateId('');
+    expect(typeof id).toBe('string');
+    expect(id.length).toBeGreaterThan(0);
+  });
+
+  it('should contain a timestamp component', () => {
+    const before = Date.now();
+    const id = generateId('');
+    const after = Date.now();
+    const numericPart = parseInt(id.split('_')[0], 10);
+    expect(numericPart).toBeGreaterThanOrEqual(before);
+    expect(numericPart).toBeLessThanOrEqual(after);
   });
 });
